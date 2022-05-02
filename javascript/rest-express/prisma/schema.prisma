@@ -7,21 +7,40 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model User {
+
+model Customer {
   id    Int     @id @default(autoincrement())
   email String  @unique
   name  String?
-  posts Post[]
+  transactions Transactions[]
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  viewCount Int      @default(0)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+model Transactions {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  content     String?
+  published   Boolean  @default(false)
+  viewCount   Int      @default(0)
+  author      Customer?    @relation(fields: [authorId], references: [id])
+  authorId    Int?
+  cashbacks Cashbacks[]
+}
+
+model Cashbacks {
+  id                       Int       @id @default(autoincrement())
+  createdAt                DateTime @default(now())
+  cashback                 Float
+  earnedFromTransaction    Transactions?      @relation(fields: [transactionId], references: [id])
+  transactionId            Int?
+}
+
+model Rulesets {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  startDate       DateTime
+  endDate         DateTime
+  cashback        Int
+  redemptionLimit Int
 }
