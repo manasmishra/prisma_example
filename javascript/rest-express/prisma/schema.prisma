@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 datasource db {
@@ -13,27 +14,23 @@ model Customer {
   email String  @unique
   name  String?
   transactions Transactions[]
+  rulesets          RulesetsOnCustomers[]
 }
 
 model Transactions {
   id          Int      @id @default(autoincrement())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  title       String
-  content     String?
-  published   Boolean  @default(false)
-  viewCount   Int      @default(0)
-  author      Customer?    @relation(fields: [authorId], references: [id])
-  authorId    Int?
-  cashbacks Cashbacks[]
+  author      Customer?    @relation(fields: [customerId], references: [id])
+  customerId    Int?
+  rulesetsApplied RulesetsOnTransactions[]
 }
 
 model Cashbacks {
   id                       Int       @id @default(autoincrement())
   createdAt                DateTime @default(now())
   cashback                 Float
-  earnedFromTransaction    Transactions?      @relation(fields: [transactionId], references: [id])
-  transactionId            Int?
+  rulesetOnTransactions   RulesetsOnTransactions[]
 }
 
 model Rulesets {
@@ -41,6 +38,32 @@ model Rulesets {
   createdAt       DateTime @default(now())
   startDate       DateTime
   endDate         DateTime
-  cashback        Int
+  cashback        Float
   redemptionLimit Int
+  minTransactions Int?     @default(0)
+  transactions       RulesetsOnTransactions[]
+  customers          RulesetsOnCustomers[]
+}
+
+model RulesetsOnTransactions {
+  ruleset           Rulesets     @relation(fields: [rulesetId], references: [id])
+  rulesetId         Int // relation scalar field (used in the `@relation` attribute above)
+  transaction       Transactions @relation(fields: [transactionId], references: [id])
+  transactionId     Int // relation scalar field (used in the `@relation` attribute above)
+  assignedAt        DateTime @default(now())
+  linkedToCashback  Cashbacks?  @relation(fields: [cashbackId], references: [id])
+  cashbackId        Int?
+
+  @@id([rulesetId, transactionId])
+}
+
+model RulesetsOnCustomers {
+  ruleset               Rulesets     @relation(fields: [rulesetId], references: [id])
+  rulesetId             Int // relation scalar field (used in the `@relation` attribute above)
+  customer              Customer @relation(fields: [customerId], references: [id])
+  customerId            Int // relation scalar field (used in the `@relation` attribute above)
+  assignedAt            DateTime @default(now())
+  rulesetReedemedCount  Int
+
+  @@id([rulesetId, customerId])
 }
